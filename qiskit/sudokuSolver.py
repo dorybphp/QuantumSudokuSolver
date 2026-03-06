@@ -73,7 +73,7 @@ def check_logic_const(qc: QuantumCircuit, var_qs: List, val: int, aux: QuantumRe
     if not (val & 2): qc.x(var_qs[0])
     
     qc.ccx(var_qs[0], var_qs[1], aux)
-    qc.x(aux) # Flip to 1 if NOT equal
+    qc.x(aux) # flip to 1 if NOT equal
     
     # uncompute
     if not (val & 2): qc.x(var_qs[0])

@@ -44,7 +44,7 @@ def run_test(vars, fixed, rules, iters, title):
     sim = AerSimulator()
     t_qc = transpile(qc, sim)
     
-    # Check if we are within the user's 28-qubit limit
+    # check if we are within the 28-qubit limit (personal device limitation)
     num_qubits = len(qc.qubits)
     print(f"Total Qubits Used: {num_qubits}")
     if num_qubits > 28:
@@ -60,7 +60,7 @@ def test_level_1_row():
 def test_level_2_box():
     vars = [0, 1, 4, 5]
     fixed = {2: 2, 3: 3, 6: 0, 7: 1}
-    rules = [(0,1), (4,5), (0,4), (1,5), (0,5), (1,4), (0,2), (1,3), (4,6), (5,7)]
+    rules = [(0,1), (4,5), (0,4), (1,5), (0,5), (1,4), (0,2), (0,3), (1,2), (1,3), (4,6), (4,7), (5,6), (5,7)]
     run_test(vars, fixed, rules, 12, "LEVEL 2: 2x2 Box")
 
 def test_level_3_full_25q():
