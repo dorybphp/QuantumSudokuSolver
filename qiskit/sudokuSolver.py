@@ -28,7 +28,7 @@ def diffuser(n_qubits: int) -> Gate:
     qc.h(range(n_qubits))
     return qc.to_gate(label="diffuser")
 
-def check_logic(qc: QuantumCircuit, var_a_qs: List, var_b_qs: List, aux: QuantumRegister):
+def check_logic(qc: QuantumCircuit, var_a_qs: List, var_b_qs: List, aux: QuantumRegister, workspace: List):
     """
     Oracle component: Marks an auxiliary qubit if two quantum variables are NOT equal.
     
@@ -40,20 +40,25 @@ def check_logic(qc: QuantumCircuit, var_a_qs: List, var_b_qs: List, aux: Quantum
         var_a_qs (List): Two qubits representing Sudoku Cell A.
         var_b_qs (List): Two qubits representing Sudoku Cell B.
         aux (QuantumRegister): The auxiliary qubit to flip if A != B.
+        workspace (List): A temporary workspace (ancilla qubits).
     """
-    # bitwise XOR
-    qc.cx(var_a_qs[0], var_b_qs[0])
-    qc.cx(var_a_qs[1], var_b_qs[1])
+    # XOR both variables into the workspace
+    qc.cx(var_a_qs[0], workspace[0])
+    qc.cx(var_b_qs[0], workspace[0])
+    qc.cx(var_a_qs[1], workspace[1])
+    qc.cx(var_b_qs[1], workspace[1])
     
-    # check if XOR result is NOT '00'
-    qc.x(var_b_qs)
-    qc.ccx(var_b_qs[0], var_b_qs[1], aux)
-    qc.x(aux) 
+    # if workspace is NOT '00', they are different
+    qc.x(workspace)
+    qc.ccx(workspace[0], workspace[1], aux)
+    qc.x(aux) # aux=1 means 'Passed (Different)'
     
     # uncompute
-    qc.x(var_b_qs)
-    qc.cx(var_a_qs[1], var_b_qs[1])
-    qc.cx(var_a_qs[0], var_b_qs[0])
+    qc.x(workspace)
+    qc.cx(var_b_qs[1], workspace[1])
+    qc.cx(var_a_qs[1], workspace[1])
+    qc.cx(var_b_qs[0], workspace[0])
+    qc.cx(var_a_qs[0], workspace[0])
 
 def check_logic_const(qc: QuantumCircuit, var_qs: List, val: int, aux: QuantumRegister):
     """
@@ -69,15 +74,16 @@ def check_logic_const(qc: QuantumCircuit, var_qs: List, val: int, aux: QuantumRe
         aux (QuantumRegister): The auxiliary qubit to flip if Var != val.
     """
     # flip bits based on the constant so that the 'Equal' state is |11>
-    if not (val & 1): qc.x(var_qs[1])
-    if not (val & 2): qc.x(var_qs[0])
+    # 0 maps to LSB, 1 to MSB
+    if not (val & 1): qc.x(var_qs[0])
+    if not (val & 2): qc.x(var_qs[1])
     
     qc.ccx(var_qs[0], var_qs[1], aux)
     qc.x(aux) # flip to 1 if NOT equal
     
     # uncompute
-    if not (val & 2): qc.x(var_qs[0])
-    if not (val & 1): qc.x(var_qs[1])
+    if not (val & 2): qc.x(var_qs[1])
+    if not (val & 1): qc.x(var_qs[0])
 
 def grover_sudoku(variables: List[int], fixed: Dict[int, int], all_constraints: List[Tuple[int, int]], iterations: int) -> QuantumCircuit:
     """
@@ -100,9 +106,10 @@ def grover_sudoku(variables: List[int], fixed: Dict[int, int], all_constraints: 
     
     v = QuantumRegister(len(variables) * 2, 'v')
     c = QuantumRegister(len(rel_constraints), 'c')
+    w = QuantumRegister(2, 'workspace')
     out = QuantumRegister(1, 'out')
     cr = ClassicalRegister(len(variables) * 2)
-    qc = QuantumCircuit(v, c, out, cr)
+    qc = QuantumCircuit(v, c, w, out, cr)
     
     # init variables to superposition
     qc.h(v)
@@ -114,7 +121,7 @@ def grover_sudoku(variables: List[int], fixed: Dict[int, int], all_constraints: 
         for i, (idx1, idx2) in enumerate(rel_constraints):
             if idx1 in variables and idx2 in variables:
                 p1, p2 = variables.index(idx1), variables.index(idx2)
-                check_logic(qc, [v[p1*2], v[p1*2+1]], [v[p2*2], v[p2*2+1]], c[i])
+                check_logic(qc, [v[p1*2], v[p1*2+1]], [v[p2*2], v[p2*2+1]], c[i], [w[0], w[1]])
             else:
                 var_idx = idx1 if idx1 in variables else idx2
                 const_val = fixed[idx2] if idx1 in variables else fixed[idx1]
@@ -127,7 +134,7 @@ def grover_sudoku(variables: List[int], fixed: Dict[int, int], all_constraints: 
         for i, (idx1, idx2) in reversed(list(enumerate(rel_constraints))):
             if idx1 in variables and idx2 in variables:
                 p1, p2 = variables.index(idx1), variables.index(idx2)
-                check_logic(qc, [v[p1*2], v[p1*2+1]], [v[p2*2], v[p2*2+1]], c[i])
+                check_logic(qc, [v[p1*2], v[p1*2+1]], [v[p2*2], v[p2*2+1]], c[i], [w[0], w[1]])
             else:
                 var_idx = idx1 if idx1 in variables else idx2
                 const_val = fixed[idx2] if idx1 in variables else fixed[idx1]

@@ -100,16 +100,15 @@ def test_level_2_box():
     vars = [0, 1, 4, 5]
     fixed = {2: 2, 3: 3, 6: 0, 7: 1}
     rules = [(0,1), (4,5), (0,4), (1,5), (0,5), (1,4), (0,2), (0,3), (1,2), (1,3), (4,6), (4,7), (5,6), (5,7)]
-    run_test(vars, fixed, rules, 12, "LEVEL 2: 2x2 Box")
+    run_test(vars, fixed, rules, 2, "LEVEL 2: 2x2 Box")
 
-def test_level_3_full_25q():
-    """ Integration test scaled to 25 qubits for 28-qubit hardware compatibility. """
+def test_level_3_full():
     vars = [0, 1, 2] # 3 Variables = 6 qubits
     fixed = {3:0, 4:2, 5:3, 6:0, 7:1, 8:1, 9:0, 10:3, 11:2, 12:3, 13:1, 14:2, 15:0}
     all_rules = get_full_sudoku_rules()
-    run_test(vars, fixed, all_rules, 6, "LEVEL 3: Full Integration (25 Qubits)")
+    run_test(vars, fixed, all_rules, 1, "LEVEL 3: Full Integration")
 
 if __name__ == "__main__":
     test_level_1_row()
     test_level_2_box()
-    test_level_3_full_25q()
+    test_level_3_full()
