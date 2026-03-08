@@ -32,24 +32,25 @@ def decode(bitstring: str, variables: List[int]) -> str:
     Returns:
         str: A formatted string showing cell values (e.g., "Cell 0: 3, Cell 1: 1").
     """
-    bits = bitstring[::-1]
-    return ", ".join([f"Cell {v}: {int(bits[i*2+1])*2 + int(bits[i*2])}" for i, v in enumerate(variables)])
+    bits = bitstring
+    results = []
+    for i, v in enumerate(variables):
+        ones = int(bits[-(i*2+1)])
+        twos = int(bits[-(i*2+2)])
+        val = ones + (twos * 2)
+        results.append(f"Cell {v}: {val}")
+    return ", ".join(results)
 
 def print_grid(variables, winner_bitstring, fixed):
     """
     Combines measured variables and fixed hints to display a 4x4 grid.
     """
-    # flat list of 16 empty spots
     grid = [None] * 16
+    for idx, val in fixed.items(): grid[idx] = val
     
-    # fill in the fixed numbers
-    for idx, val in fixed.items():
-        grid[idx] = val
-        
-    # decode bitstring into values for the variables
-    bits = winner_bitstring[::-1]
+    bits = winner_bitstring
     for i, v_idx in enumerate(variables):
-        val = int(bits[i*2+1])*2 + int(bits[i*2])
+        val = int(bits[-(i*2+1)]) + (int(bits[-(i*2+2)]) * 2)
         grid[v_idx] = val
 
     # print the visual grid
@@ -104,7 +105,12 @@ def test_level_2_box():
 
 def test_level_3_full():
     vars = [0, 1, 2] # 3 Variables = 6 qubits
-    fixed = {3:0, 4:2, 5:3, 6:0, 7:1, 8:1, 9:0, 10:3, 11:2, 12:3, 13:1, 14:2, 15:0}
+    fixed = {
+    3: 3,
+    4: 2, 5: 3, 6: 0, 7: 1,
+    8: 1, 9: 0, 10: 3, 11: 2,
+    12: 3, 13: 2, 14: 1, 15: 0
+    }
     all_rules = get_full_sudoku_rules()
     run_test(vars, fixed, all_rules, 1, "LEVEL 3: Full Integration")
 
