@@ -35,6 +35,39 @@ def decode(bitstring: str, variables: List[int]) -> str:
     bits = bitstring[::-1]
     return ", ".join([f"Cell {v}: {int(bits[i*2+1])*2 + int(bits[i*2])}" for i, v in enumerate(variables)])
 
+def print_grid(variables, winner_bitstring, fixed):
+    """
+    Combines measured variables and fixed hints to display a 4x4 grid.
+    """
+    # flat list of 16 empty spots
+    grid = [None] * 16
+    
+    # fill in the fixed numbers
+    for idx, val in fixed.items():
+        grid[idx] = val
+        
+    # decode bitstring into values for the variables
+    bits = winner_bitstring[::-1]
+    for i, v_idx in enumerate(variables):
+        val = int(bits[i*2+1])*2 + int(bits[i*2])
+        grid[v_idx] = val
+
+    # print the visual grid
+    print("\n   0 1 | 2 3") # Column indices for reference
+    print("  ---------")
+    for r in range(4):
+        row_vals = []
+        for c in range(4):
+            val = grid[r*4 + c]
+            row_vals.append(str(val) if val is not None else "?")
+        
+        # visual divider for the 2x2 blocks
+        display_row = f"{r} | {row_vals[0]} {row_vals[1]} | {row_vals[2]} {row_vals[3]}"
+        print(display_row)
+        if r == 1:
+            print("  ---------")
+    print()
+
 def run_test(vars, fixed, rules, iters, title):
     """
     Standardizes the transpilation and execution of the Sudoku circuits.
@@ -52,7 +85,13 @@ def run_test(vars, fixed, rules, iters, title):
         
     counts = sim.run(t_qc, shots=4096).result().get_counts()
     winner = max(counts, key=counts.get)
-    print(f"Top Result: {winner} -> ({decode(winner, vars)})")
+    
+    print(f"\nMeasurement Result: {winner}")
+    print(f"Decoded: ({decode(winner, vars)})")
+    
+    # visual grid
+    print("\nFinal Sudoku Grid:")
+    print_grid(vars, winner, fixed)
 
 def test_level_1_row():
     run_test([0], {1: 1, 4: 2}, [(0,1), (0,4)], 1, "LEVEL 1: Row/Col")
