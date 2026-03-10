@@ -37,8 +37,8 @@ def check_logic(qc: QuantumCircuit, var_a_qs: List, var_b_qs: List, aux: Quantum
 
     Args:
         qc (QuantumCircuit): The circuit to append gates to.
-        var_a_qs (List): Two qubits representing Sudoku Cell A.
-        var_b_qs (List): Two qubits representing Sudoku Cell B.
+        var_a_qs (List[Qubit]): Two qubits representing Sudoku Cell A.
+        var_b_qs (List[Qubit]): Two qubits representing Sudoku Cell B.
         aux (QuantumRegister): The auxiliary qubit to flip if A != B.
         workspace (List): A temporary workspace (ancilla qubits).
     """
