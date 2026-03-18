@@ -95,7 +95,7 @@ def run_test(vars, fixed, rules, iters, title):
     print_grid(vars, winner, fixed)
 
 def test_level_1_row():
-    run_test([0], {1: 1, 4: 2}, [(0,1), (0,4)], 1, "LEVEL 1: Row/Col")
+    run_test([0], {1: 1, 2: 2, 3: 3}, [(0,1), (0,2), (0,3)], 1, "LEVEL 1: Row")
 
 def test_level_2_box():
     vars = [0, 1, 4, 5]
